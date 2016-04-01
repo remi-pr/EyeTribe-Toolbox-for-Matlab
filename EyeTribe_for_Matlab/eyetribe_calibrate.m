@@ -38,7 +38,8 @@ for i = 1:3
         y = [y sp(j)*h];
     end
 end
-
+x = round(x)
+y = round(y)
 % send calibration starting message
 disp('Starting calibration.')
 message = eyetribe_send_command(connection, 'Calibration start');
@@ -49,6 +50,7 @@ if strcmp(message, 'success')
     
     % run until aborted or calibrated
     running = 1;
+    aborted = false;
     while running == 1
     
         % % % % %
@@ -68,6 +70,7 @@ if strcmp(message, 'success')
                         disp('Failed to abort calibration.')
                     else
                         running = 0;
+                        aborted = true;
                         break
                     end
                 end
@@ -163,7 +166,8 @@ if strcmp(message, 'success')
             end
         end
         % draw text on Screen
-        Screen('DrawText', window, resulttext, round(w/2), round(h/4), fgc);
+%         Screen('DrawText', window, resulttext, round(w/2), round(h/4), fgc);
+        DrawFormattedText(window, resulttext, 'center','center', WhiteIndex(window));
         % show results!
         Screen('Flip', window);
         
@@ -186,14 +190,23 @@ if strcmp(message, 'success')
             end
         end
         
-        % calibration ending message
-        message = eyetribe_send_command(connection, 'Calibration finished');
-        if strcmp(message, 'success') == 0
-            disp('Failed to exit calibration mode.')
-        else
-            % set success to True
-            success = 1;
+        if ~aborted
+            % calibration ending message
+            message = eyetribe_send_command(connection, 'Calibration finished');
+            if strcmp(message, 'success') == 0
+                disp('Failed to exit calibration mode.')
+            else
+                % set success to True
+                success = 1;
+            end
+            % send abort message
+            message = eyetribe_send_command(connection, 'Calibration abort');
+            if strcmp(message, 'success') == 0
+              disp('Failed to abort calibration in the restart process.')
+            end
         end
+
+
         % restart if needed
         if restart
             success = 0;
@@ -201,6 +214,8 @@ if strcmp(message, 'success')
             if strcmp(message, 'success') == 0
                 disp('Failed restart calibration mode.')
             end            
+            running = 1;
+            aborted=false;
         end
     end
 

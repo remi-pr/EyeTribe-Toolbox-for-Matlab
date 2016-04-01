@@ -77,96 +77,98 @@ while not stopped:
 	
 	# if there was no new message, skip further processing
 	# (which will make us go back to checking for new messages)
-	if message == None:
+	if message is None:
 		continue
 	
+	# Deactivate calibration mode because prevents from aborting calibration after calibration finished
+	# Benefits of this mode are anyway unclear
 	# CALIBRATION MODE
-	if calibrationmode:
-		
-		# POINT START
-		if "Calibration pointstart" in message:
-			try:
-				# parse message for point coordinates
-				xpos = message.find('x=')
-				ypos = message.find('y=')
-				x = int(message[xpos+2:ypos-1])
-				y = int(message[ypos+2:])
-				# send command and message
-				tracker.calibration.pointstart(x,y)
-				conn.send('success')
-			except:
-				print("ERROR in Calibration pointstart: could not parse message '%s'" % message)
-				conn.send("ERROR in Calibration pointstart: could not parse message '%s'" % message)
-		
-		# POINT END
-		if message == "Calibration pointend":
-			try:
-				result = tracker.calibration.pointend()
-				conn.send('success')
-			except:
-				print("ERROR in Calibration pointend: failed to end point")
-				conn.send("ERROR in Calibration pointend: failed to end point")
-		
-		# ABORT
-		if message == "Calibration abort":
-			try:
-				tracker.calibration.abort()
-				conn.send('success')
-				result = None
-				calibrationmode = False
-				print("Calibration aborted.")
-			except:
-				print("ERROR in Calibration abort: failed to abort")
-				conn.send("ERROR in Calibration abort: failed to abort")
-		
-		# GET RESULT
-		if message == "Calibration result":
-			try:
-				# check if the results are in yet
-				if type(result) != dict:
-					# explicitly get the results
-					tracker._tracker.get_calibresult()
-				# format the results to send back to Matlab
-				# (results should be formatted as a string makes sense to
-				# Matlab when calling eval('result = %s'))
-				states = []
-				errors = []
-				actx = []
-				acty = []
-				estx = []
-				esty = []
-				for p in result['calibpoints']:
-					states.append(p['state'])
-					errors.append(p['mepix'])
-					actx.append(p['cpx'])
-					acty.append(p['cpy'])
-					estx.append(p['mecpx'])
-					esty.append(p['mecpy'])
-				matlabstring = '['
-				matlabstring += str(states) + '; '
-				matlabstring += str(errors) + '; '
-				matlabstring += str(actx) + '; '
-				matlabstring += str(acty) + '; '
-				matlabstring += str(estx) + '; '
-				matlabstring += str(esty) + ']'
-				matlabstring = matlabstring.replace(',','')
-				# send the results back to matlab
-				conn.send('success;%s' % matlabstring)
-			except:
-				print("ERROR in Calibration abort: failed to abort")
-				conn.send("ERROR in Calibration abort: failed to abort")
-		
-		# FINISHED
-		if message == "Calibration finished":
-			try:
-				conn.send('success')
-				result = None
-				calibrationmode = False
-				print("Calibration finished.")
-			except:
-				print("ERROR in Calibration finished: failed to exit calibration mode")
-				conn.send("ERROR in Calibration finished: failed to exit calibration mode")
-		
+	# if calibrationmode:
+	
+	# POINT START
+	if "Calibration pointstart" in message:
+		try:
+			# parse message for point coordinates
+			xpos = message.find('x=')
+			ypos = message.find('y=')
+			x = int(message[xpos+2:ypos-1])
+			y = int(message[ypos+2:])
+			# send command and message
+			tracker.calibration.pointstart(x,y)
+			conn.send('success')
+		except:
+			print("ERROR in Calibration pointstart: could not parse message '%s'" % message)
+			conn.send("ERROR in Calibration pointstart: could not parse message '%s'" % message)
+	
+	# POINT END
+	elif message == "Calibration pointend":
+		try:
+			result = tracker.calibration.pointend()
+			conn.send('success')
+		except:
+			print("ERROR in Calibration pointend: failed to end point")
+			conn.send("ERROR in Calibration pointend: failed to end point")
+	
+	# ABORT
+	elif message == "Calibration abort":
+		try:
+			tracker.calibration.abort()
+			conn.send('success')
+			result = None
+			calibrationmode = False
+			print("Calibration aborted.")
+		except:
+			print("ERROR in Calibration abort: failed to abort")
+			conn.send("ERROR in Calibration abort: failed to abort")
+	
+	# GET RESULT
+	elif message == "Calibration result":
+		try:
+			# check if the results are in yet
+			if type(result) != dict:
+				# explicitly get the results
+				tracker._tracker.get_calibresult()
+			# format the results to send back to Matlab
+			# (results should be formatted as a string makes sense to
+			# Matlab when calling eval('result = %s'))
+			states = []
+			errors = []
+			actx = []
+			acty = []
+			estx = []
+			esty = []
+			for p in result['calibpoints']:
+				states.append(p['state'])
+				errors.append(p['mepix'])
+				actx.append(p['cpx'])
+				acty.append(p['cpy'])
+				estx.append(p['mecpx'])
+				esty.append(p['mecpy'])
+			matlabstring = '['
+			matlabstring += str(states) + '; '
+			matlabstring += str(errors) + '; '
+			matlabstring += str(actx) + '; '
+			matlabstring += str(acty) + '; '
+			matlabstring += str(estx) + '; '
+			matlabstring += str(esty) + ']'
+			matlabstring = matlabstring.replace(',','')
+			# send the results back to matlab
+			conn.send('success;%s' % matlabstring)
+		except:
+			print("ERROR in Calibration abort: failed to abort")
+			conn.send("ERROR in Calibration abort: failed to abort")
+	
+	# FINISHED
+	elif message == "Calibration finished":
+		try:
+			conn.send('success')
+			result = None
+			calibrationmode = False
+			print("Calibration finished.")
+		except:
+			print("ERROR in Calibration finished: failed to exit calibration mode")
+			conn.send("ERROR in Calibration finished: failed to exit calibration mode")
+	
 
 	# INIT
 	elif "Initialize EyeTribe" in message:
@@ -189,7 +191,7 @@ while not stopped:
 	# CALIBRATE
 	elif message == "Calibration start":
 		# check if there is an initialized tracker yet
-		if tracker == None:
+		if tracker is None:
 			print('ERROR in Calibration start: tracker was not initialized.')
 			conn.send('ERROR in Calibration start: tracker was not initialized.')
 		# go into calibration mode
@@ -205,7 +207,7 @@ while not stopped:
 	
 	# START RECORDING
 	elif message == 'Start recording':
-		if tracker == None:
+		if tracker is None:
 			print('ERROR in Start recording: tracker was not initialized.')
 			conn.send('ERROR in Start recording: tracker was not initialized.')
 		else:
@@ -218,7 +220,7 @@ while not stopped:
 	
 	# STOP RECORDING
 	elif message == 'Stop recording':
-		if tracker == None:
+		if tracker is None:
 			print('ERROR in Stop recording: tracker was not initialized.')
 			conn.send('ERROR in Stop recording: tracker was not initialized.')
 		else:
@@ -231,7 +233,7 @@ while not stopped:
 	
 	# LOG
 	elif "Log; message=" in message:
-		if tracker == None:
+		if tracker is None:
 			print('ERROR in Log: tracker was not initialized.')
 			conn.send('ERROR in Log: tracker was not initialized.')
 		else:
@@ -251,7 +253,7 @@ while not stopped:
 	
 	# SAMPLE
 	elif message == "Sample":
-		if tracker == None:
+		if tracker is None:
 			print('ERROR in Sample: tracker was not initialized.')
 			conn.send('ERROR in Sample: tracker was not initialized.')
 		else:
@@ -262,16 +264,16 @@ while not stopped:
 				x = y = -999
 				print("ERROR in Sample: failed to obtain sample")
 			# remove potential None
-			if x == None:
+			if x is None:
 				x = -999
-			if y == None:
+			if y is None:
 				y = -999
 			# send message
 			conn.send("success;x=%d,y=%d" % (x,y))
 	
 	# PUPIL SAMPLE
 	elif message == "Pupil size":
-		if tracker == None:
+		if tracker is None:
 			print('ERROR in Pupil size: tracker was not initialized.')
 			conn.send('ERROR in Pupil size: tracker was not initialized.')
 		else:
@@ -282,14 +284,14 @@ while not stopped:
 				size = -999
 				print("ERROR in Pupil size: failed to obtain sample")
 			# remove potential None
-			if size == None:
+			if size is None:
 				x = -999
 			# send message
 			conn.send("success;s=%.4f" % (size))
 	
 	# CLOSE
 	elif message == 'Close':
-		if tracker == None:
+		if tracker is None:
 			print('ERROR in Close: tracker was not initialized.')
 			conn.send('ERROR in Close: tracker was not initialized.')
 		else:

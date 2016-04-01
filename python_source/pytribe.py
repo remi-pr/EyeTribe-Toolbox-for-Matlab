@@ -133,7 +133,7 @@ class EyeTribe:
 		gaze		--	a (x,y) tuple indicating the point of regard
 		"""
 		
-		if self._currentsample == None:
+		if self._currentsample is None:
 			return None, None
 		else:
 			return (self._currentsample['avgx'],self._currentsample['avgy'])
@@ -152,7 +152,7 @@ class EyeTribe:
 		pupsize	--	a float indicating the pupil size (in arbitrary units)
 		"""
 		
-		if self._currentsample == None:
+		if self._currentsample is None:
 			return None
 		else:
 			return self._currentsample['psize']
@@ -483,19 +483,19 @@ class connection:
 			# append the list ending
 			valuestring += '" ]'
 		# check if there are no values
-		elif values == None:
+		elif values is None:
 			pass
 		# error if the values are anything other than a dict, tuple or list
 		else:
 			raise Exception("values should be dict, tuple or list, not '%s' (values = %s)" % (type(values),values))
 		
 		# create the json message
-		if request == None:
+		if request is None:
 			jsonmsg = '''
 {
 "category": "%s"
 }''' % (category)
-		elif values == None:
+		elif values is None:
 			jsonmsg = '''
 {
 "category": "%s",
@@ -950,7 +950,7 @@ class tracker:
 		"""
 		
 		# check passed value
-		if push == None:
+		if push is None:
 			# toggle state
 			self.push = self.push != True
 		elif type(push) == bool:
@@ -1116,7 +1116,12 @@ class calibration:
 						calibration points that should be used, which
 						should be at least 7 (default = 9)
 		"""
-		
+		# Remove previous calibration values
+		try:
+			response = self.clear()
+			print 'Clearing the calibration values ', response
+		except:
+			print 'No previous calibration to remove. Moving on.'
 		# send the request
 		response = self.connection.request('calibration', 'start', {'pointcount':pointcount})
 		# return value or error
