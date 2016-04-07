@@ -196,14 +196,10 @@ while not stopped:
 			conn.send('ERROR in Calibration start: tracker was not initialized.')
 		# go into calibration mode
 		else:
-			try:
-				tracker.calibration.start(pointcount=9)
-				conn.send('success')
-				calibrationmode = True
-				print("Calibration start: success!")
-			except:
-				print("ERROR in Calibration start: failed to start calibration.")
-				conn.send("ERROR in Calibration start: failed to start calibration.")
+			tracker.calibration.start(pointcount=9)
+			conn.send('success')
+			calibrationmode = True
+			print("Calibration start: success!")
 	
 	# START RECORDING
 	elif message == 'Start recording':

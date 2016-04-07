@@ -399,8 +399,16 @@ class connection:
 						return self.resplist.pop(i)
 					# if this is another category, check if the request
 					# matches
-					elif self.resplist[i]['request'] == request:
-						return self.resplist.pop(i)
+					else
+						cond = False
+						try:
+							cond = self.resplist[i]['request'] == request:
+						except KeyError;
+							# This happens when the response is an error message
+							# then the request field is absent
+							pass
+						if cond:
+							return self.resplist.pop(i)
 		# on a connection error, get_response returns False and a connection
 		# error should be returned
 		else:
